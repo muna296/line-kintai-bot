@@ -37,7 +37,12 @@ async function handleMessage(userId, text, replyToken) {
 
   switch (state.step) {
     case undefined:
-      await replyQuickReply(replyToken, 'どのクライアントの勤怠を記録しますか？', CLIENTS);
+      try {
+        await replyQuickReply(replyToken, 'どのクライアントの勤怠を記録しますか？', CLIENTS);
+        console.log('replyQuickReply success');
+      } catch (err) {
+        console.error('replyQuickReply error:', err.message, err.stack);
+      }
       await setState(userId, { step: 'WAIT_CLIENT' });
       break;
 
