@@ -25,7 +25,9 @@ exports.handler = async (event) => {
 };
 
 async function handleMessage(userId, text, replyToken) {
+  console.log('handleMessage called:', { userId, text, replyToken }); // ← 追加
   const state = await getState(userId);
+  console.log('current state:', state); // ← 追加
 
   if (text === 'リセット') {
     await clearState(userId);
