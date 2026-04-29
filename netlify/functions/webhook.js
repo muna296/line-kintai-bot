@@ -131,6 +131,10 @@ async function replyQuickReply(replyToken, message, items) {
 async function lineApi(path, body) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
+    const fullUrl = `https://api.line.me${path}`;
+    console.log('Calling LINE API:', fullUrl);
+    console.log('Request body:', JSON.stringify(body).substring(0, 200));
+    
     const req  = https.request({
       hostname: 'api.line.me',
       port: 443,
@@ -149,6 +153,15 @@ async function lineApi(path, body) {
         resolve();
       });
     });
+
+    req.on('error', (err) => {
+      console.error('LINE API error:', err);
+      reject(err);
+    });
+    req.write(data);
+    req.end();
+  });
+}
 
     req.on('error', (err) => {
       console.error('LINE API error:', err);
