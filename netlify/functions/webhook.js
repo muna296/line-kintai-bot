@@ -130,7 +130,9 @@ async function lineApi(body) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     console.log('LINE API request path: /v2/bot/reply');
-    console.log('LINE API request body:', data.substring(0, 300));
+    console.log('LINE API request body:', data); // 全文表示
+    console.log('LINE API token length:', LINE_ACCESS_TOKEN.length);
+    console.log('LINE API token start:', LINE_ACCESS_TOKEN.substring(0, 20));
 
     const req = https.request({
       hostname: 'api.line.me',
