@@ -1,6 +1,6 @@
 const https = require('https');
 
-const LINE_ACCESS_TOKEN = 'WjvTBBluC015EUiD5rDi8Rf17mvdXPjVyzKpQIs5Fmtx4gsh8jQZkjFycjgFoC9shJ90L6nBnuDfbr+CVtNHWmgnWrJOFQ49b7SiZt3yqmAddIYNv56X1IThJ6MWQhQJeOqcVirf+bhhQWjS4ypqbAdB04t89/1O/w1cDnyilFU=';
+const LINE_ACCESS_TOKEN = 'RtSpVC9Yh9h4WHdEmWxZX9tZxO2h0xiJWzDKMrUWS3ERNSuD171hDF/mw42yRAJChJ90L6nBnuDfbr+CVtNHWmgnWrJOFQ49b7SiZt3yqmASJ72I2eg5ik13F9vaEp5tIXRnuogU2EO9WQyZf/4q+QdB04t89/1O/w1cDnyilFU=';
 const SHEET_ID          = '1ASDXEKBNJP7o--a4dixs6TcTJNZ7qa6sfT0d-N_YFGM';
 const CLIENTS           = ['Amazon', 'リコー', 'ウエルシア'];
 
