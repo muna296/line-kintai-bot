@@ -8,11 +8,9 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 200, body: 'OK' };
   }
-
   try {
     const body   = JSON.parse(event.body);
     const events = body.events || [];
-
     await Promise.all(events.map(async (e) => {
       if (e.type !== 'message' || e.message.type !== 'text') return;
       await handleMessage(e.source.userId, e.message.text.trim(), e.replyToken);
@@ -20,12 +18,11 @@ exports.handler = async (event) => {
   } catch (err) {
     console.error('Error:', err);
   }
-
   return { statusCode: 200, body: 'OK' };
 };
 
 async function handleMessage(userId, text, replyToken) {
-  console.log('handleMessage:', { userId, text, replyToken }); // replyTokenも出力
+  console.log('handleMessage:', { userId, text, replyToken });
 
   if (text === 'リセット') {
     await replyText(replyToken, 'リセットしました！\n「開始」と送ってください。');
@@ -51,7 +48,6 @@ async function handleMessage(userId, text, replyToken) {
     return;
   }
 
-  // クライアント/日付
   const dateMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})$/);
   if (dateMatch) {
     const client = dateMatch[1];
@@ -64,7 +60,6 @@ async function handleMessage(userId, text, replyToken) {
     return;
   }
 
-  // クライアント/日付/時間
   const hoursMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})\/(\d+\.?\d*)$/);
   if (hoursMatch) {
     const client = hoursMatch[1];
@@ -78,7 +73,6 @@ async function handleMessage(userId, text, replyToken) {
     return;
   }
 
-  // クライアント/日付/時間/内容
   const memoMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})\/(\d+\.?\d*)\/(.+)$/);
   if (memoMatch) {
     const client = memoMatch[1];
@@ -96,7 +90,7 @@ async function handleMessage(userId, text, replyToken) {
     return;
   }
 
-  await replyText(replyToken, '「開始」と送ると勤怠記録を始められます！\n「リセット」で最初からやり直せます。');
+  await replyText(replyToken, '「開始」と送ると勤怠記録を始められます！');
 }
 
 async function saveRecord(client, date, hours, memo) {
@@ -104,16 +98,16 @@ async function saveRecord(client, date, hours, memo) {
 }
 
 async function replyText(replyToken, message) {
-  console.log('replyText:', message.substring(0, 50));
-  await lineApi('/v2/bot/reply', {
+  console.log('replyText sending...');
+  await lineApi({
     replyToken,
     messages: [{ type: 'text', text: message }]
   });
 }
 
 async function replyQuickReply(replyToken, message, items) {
-  console.log('replyQuickReply:', message);
-  await lineApi('/v2/bot/reply', {
+  console.log('replyQuickReply sending...');
+  await lineApi({
     replyToken,
     messages: [{
       type: 'text',
@@ -128,17 +122,16 @@ async function replyQuickReply(replyToken, message, items) {
   });
 }
 
-async function lineApi(path, body) {
+async function lineApi(body) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
-    const fullUrl = `https://api.line.me${path}`;
-    console.log('Calling LINE API:', fullUrl);
-    console.log('Request body:', JSON.stringify(body).substring(0, 200));
-    
-    const req  = https.request({
+    console.log('LINE API request path: /v2/bot/reply');
+    console.log('LINE API request body:', data.substring(0, 300));
+
+    const req = https.request({
       hostname: 'api.line.me',
       port: 443,
-      path: path,
+      path: '/v2/bot/reply',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -149,19 +142,11 @@ async function lineApi(path, body) {
       let resBody = '';
       res.on('data', chunk => resBody += chunk);
       res.on('end', () => {
-        console.log('LINE API response:', res.statusCode, resBody);
+        console.log('LINE API response status:', res.statusCode);
+        console.log('LINE API response body:', resBody);
         resolve();
       });
     });
-
-    req.on('error', (err) => {
-      console.error('LINE API error:', err);
-      reject(err);
-    });
-    req.write(data);
-    req.end();
-  });
-}
 
     req.on('error', (err) => {
       console.error('LINE API error:', err);
