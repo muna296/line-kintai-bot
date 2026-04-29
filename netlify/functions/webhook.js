@@ -5,20 +5,30 @@ const SHEET_ID          = '1ASDXEKBNJP7o--a4dixs6TcTJNZ7qa6sfT0d-N_YFGM';
 const CLIENTS           = ['Amazon', 'リコー', 'ウエルシア'];
 
 exports.handler = async (event) => {
+  // まず即座に200を返す
+  const response = { statusCode: 200, body: 'OK' };
+
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 200, body: 'OK' };
+    return response;
   }
+
   try {
     const body   = JSON.parse(event.body);
     const events = body.events || [];
-    await Promise.all(events.map(async (e) => {
-      if (e.type !== 'message' || e.message.type !== 'text') return;
-      await handleMessage(e.source.userId, e.message.text.trim(), e.replyToken);
-    }));
+
+    // 処理はレスポンス後に非同期で実行
+    setImmediate(async () => {
+      await Promise.all(events.map(async (e) => {
+        if (e.type !== 'message' || e.message.type !== 'text') return;
+        await handleMessage(e.source.userId, e.message.text.trim(), e.replyToken);
+      }));
+    });
+
   } catch (err) {
     console.error('Error:', err);
   }
-  return { statusCode: 200, body: 'OK' };
+
+  return response;
 };
 
 async function handleMessage(userId, text, replyToken) {
