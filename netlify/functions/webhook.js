@@ -25,7 +25,7 @@ exports.handler = async (event) => {
 };
 
 async function handleMessage(userId, text, replyToken) {
-  console.log('handleMessage:', { userId, text });
+  console.log('handleMessage:', { userId, text, replyToken }); // replyTokenも出力
 
   if (text === 'リセット') {
     await replyText(replyToken, 'リセットしました！\n「開始」と送ってください。');
