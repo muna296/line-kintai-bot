@@ -48,4 +48,115 @@ async function handleMessage(userId, text, replyToken) {
       await replyText(replyToken, 'クライアントが見つかりません。「開始」と送ってください。');
       return;
     }
-    await replyText(replyToken, `【${clie
+    await replyText(replyToken, `【${client}】\n作業日を入力してください\n\n形式：${client}/2026/4/29`);
+    return;
+  }
+
+  const dateMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})$/);
+  if (dateMatch) {
+    const client = dateMatch[1];
+    const date   = dateMatch[2];
+    if (!CLIENTS.includes(client)) {
+      await replyText(replyToken, 'クライアントが見つかりません。「開始」と送ってください。');
+      return;
+    }
+    await replyText(replyToken, `【${client} / ${date}】\n作業時間を入力してください\n\n形式：${client}/${date}/3.5`);
+    return;
+  }
+
+  const hoursMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})\/(\d+\.?\d*)$/);
+  if (hoursMatch) {
+    const client = hoursMatch[1];
+    const date   = hoursMatch[2];
+    const hours  = parseFloat(hoursMatch[3]);
+    if (!CLIENTS.includes(client)) {
+      await replyText(replyToken, 'クライアントが見つかりません。「開始」と送ってください。');
+      return;
+    }
+    await replyText(replyToken, `【${client} / ${date} / ${hours}h】\n作業内容を入力してください\n\n形式：${client}/${date}/${hours}/資料作成`);
+    return;
+  }
+
+  const memoMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})\/(\d+\.?\d*)\/(.+)$/);
+  if (memoMatch) {
+    const client = memoMatch[1];
+    const date   = memoMatch[2];
+    const hours  = parseFloat(memoMatch[3]);
+    const memo   = memoMatch[4];
+    if (!CLIENTS.includes(client)) {
+      await replyText(replyToken, 'クライアントが見つかりません。「開始」と送ってください。');
+      return;
+    }
+    await saveRecord(client, date, hours, memo);
+    await replyText(replyToken,
+      `✅ 記録しました！\n\nクライアント：${client}\n作業日：${date}\n作業時間：${hours}h\n備考：${memo}\n\n続けて記録する場合は「開始」と送ってください`
+    );
+    return;
+  }
+
+  await replyText(replyToken, '「開始」と送ると勤怠記録を始められます！');
+}
+
+async function saveRecord(client, date, hours, memo) {
+  console.log(`保存: ${client}, ${date}, ${hours}h, ${memo}`);
+}
+
+async function replyText(replyToken, message) {
+  console.log('replyText sending...');
+  await lineApi({
+    replyToken,
+    messages: [{ type: 'text', text: message }]
+  });
+}
+
+async function replyQuickReply(replyToken, message, items) {
+  console.log('replyQuickReply sending...');
+  await lineApi({
+    replyToken,
+    messages: [{
+      type: 'text',
+      text: message,
+      quickReply: {
+        items: items.map(item => ({
+          type: 'action',
+          action: { type: 'message', label: item.label, text: item.text }
+        }))
+      }
+    }]
+  });
+}
+
+async function lineApi(body) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(body);
+    console.log('LINE API request path: /v2/bot/reply');
+    console.log('LINE API request body:', data.substring(0, 300));
+
+    const req = https.request({
+      hostname: 'api.line.me',
+      port: 443,
+      path: '/v2/bot/reply',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data),
+        'Authorization': `Bearer ${LINE_ACCESS_TOKEN}`
+      }
+    }, (res) => {
+      let resBody = '';
+      res.on('data', chunk => resBody += chunk);
+      res.on('end', () => {
+        console.log('LINE API response status:', res.statusCode);
+        console.log('LINE API response body:', resBody);
+        resolve();
+      });
+    });
+
+    req.on('error', (err) => {
+      console.error('LINE API error:', err);
+      reject(err);
+    });
+    req.write(data);
+    req.end();
+  });
+}
