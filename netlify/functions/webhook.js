@@ -27,31 +27,31 @@ exports.handler = async (event) => {
 async function handleMessage(userId, text, replyToken) {
   console.log('handleMessage:', { userId, text });
 
-  // コマンド処理
   if (text === 'リセット') {
-    await replyText(replyToken, 'リセットしました！\nもう一度「開始」と送ってください。');
+    await replyText(replyToken, 'リセットしました！\n「開始」と送ってください。');
     return;
   }
 
-  if (text === '開始' || text === 'スタート' || text === 'start') {
-    await replyQuickReply(replyToken, 'どのクライアントの勤怠を記録しますか？', 
+  if (text === '開始' || text === 'スタート') {
+    await replyQuickReply(
+      replyToken,
+      'どのクライアントの勤怠を記録しますか？',
       CLIENTS.map(c => ({ label: c, text: `クライアント:${c}` }))
     );
     return;
   }
 
-  // クライアント選択
   if (text.startsWith('クライアント:')) {
     const client = text.replace('クライアント:', '');
     if (!CLIENTS.includes(client)) {
       await replyText(replyToken, 'クライアントが見つかりません。「開始」と送ってください。');
       return;
     }
-    await replyText(replyToken, `【${client}】\n作業日を入力してください\n例：2026/4/29\n\n※最初に「${client}」と入力してください\n\n形式：${client}/2026/4/29`);
+    await replyText(replyToken, `【${client}】\n作業日を入力してください\n\n形式：${client}/2026/4/29`);
     return;
   }
 
-  // 日付入力（クライアント名/日付 形式）
+  // クライアント/日付
   const dateMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})$/);
   if (dateMatch) {
     const client = dateMatch[1];
@@ -60,11 +60,11 @@ async function handleMessage(userId, text, replyToken) {
       await replyText(replyToken, 'クライアントが見つかりません。「開始」と送ってください。');
       return;
     }
-    await replyText(replyToken, `【${client} / ${date}】\n作業時間を入力してください\n\n形式：${client}/${date}/時間数\n例：${client}/${date}/3.5`);
+    await replyText(replyToken, `【${client} / ${date}】\n作業時間を入力してください\n\n形式：${client}/${date}/3.5`);
     return;
   }
 
-  // 時間入力（クライアント名/日付/時間 形式）
+  // クライアント/日付/時間
   const hoursMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})\/(\d+\.?\d*)$/);
   if (hoursMatch) {
     const client = hoursMatch[1];
@@ -74,11 +74,11 @@ async function handleMessage(userId, text, replyToken) {
       await replyText(replyToken, 'クライアントが見つかりません。「開始」と送ってください。');
       return;
     }
-    await replyText(replyToken, `【${client} / ${date} / ${hours}h】\n作業内容を入力してください\n\n形式：${client}/${date}/${hours}/作業内容\n例：${client}/${date}/${hours}/資料作成`);
+    await replyText(replyToken, `【${client} / ${date} / ${hours}h】\n作業内容を入力してください\n\n形式：${client}/${date}/${hours}/資料作成`);
     return;
   }
 
-  // 作業内容入力（クライアント名/日付/時間/内容 形式）
+  // クライアント/日付/時間/内容
   const memoMatch = text.match(/^(.+)\/(\d{4}\/\d{1,2}\/\d{1,2})\/(\d+\.?\d*)\/(.+)$/);
   if (memoMatch) {
     const client = memoMatch[1];
@@ -96,18 +96,16 @@ async function handleMessage(userId, text, replyToken) {
     return;
   }
 
-  // デフォルト
   await replyText(replyToken, '「開始」と送ると勤怠記録を始められます！\n「リセット」で最初からやり直せます。');
 }
 
 async function saveRecord(client, date, hours, memo) {
   console.log(`保存: ${client}, ${date}, ${hours}h, ${memo}`);
-  // Phase 2でGoogle Sheets API連携を実装
 }
 
 async function replyText(replyToken, message) {
   console.log('replyText:', message.substring(0, 50));
-  await lineRequest({
+  await lineApi('/v2/bot/reply', {
     replyToken,
     messages: [{ type: 'text', text: message }]
   });
@@ -115,7 +113,7 @@ async function replyText(replyToken, message) {
 
 async function replyQuickReply(replyToken, message, items) {
   console.log('replyQuickReply:', message);
-  await lineRequest({
+  await lineApi('/v2/bot/reply', {
     replyToken,
     messages: [{
       type: 'text',
@@ -130,25 +128,24 @@ async function replyQuickReply(replyToken, message, items) {
   });
 }
 
-async function lineRequest(body) {
+async function lineApi(path, body) {
   return new Promise((resolve, reject) => {
-    const data    = JSON.stringify(body);
-    const options = {
+    const data = JSON.stringify(body);
+    const req  = https.request({
       hostname: 'api.line.me',
-      path: '/v2/bot/reply',
+      port: 443,
+      path: path,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(data),
         'Authorization': `Bearer ${LINE_ACCESS_TOKEN}`
       }
-    };
-
-    const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', chunk => body += chunk);
+    }, (res) => {
+      let resBody = '';
+      res.on('data', chunk => resBody += chunk);
       res.on('end', () => {
-        console.log('LINE API response:', res.statusCode, body);
+        console.log('LINE API response:', res.statusCode, resBody);
         resolve();
       });
     });
