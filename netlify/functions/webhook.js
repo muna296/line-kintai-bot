@@ -1,6 +1,6 @@
 const https = require('https');
 
-const LINE_ACCESS_TOKEN = 'WjvTBBluC015EUiD5rDi8Rf17mvdXPjVyzKpQIs5Fmtx4gsh8jQZkjFycjgFoC9shJ90L6nBnuDfbr+CVtNHWmgnWrJOFQ49b7SiZt3yqmAddIYNv56X1lThJ6MWQhQJeOqcVirf+bhhQWjS4ypqbAdB04t89/1O/w1cDnyilFU=';
+const LINE_ACCESS_TOKEN = 'const LINE_ACCESS_TOKEN = 'WjvTBBluC015EUiD5rDi8Rf17mvdXPjVyzKpQIs5Fmtx4gsh8jQZkjFycjgFoC9shJ90L6nBnuDfbr+CVtNHWmgnWrJOFQ49b7SiZt3yqmAddIYNv56X1IThJ6MWQhQJeOqcVirf+bhhQWjS4ypqbAdB04t89/1O/w1cDnyilFU=';';
 const SHEET_ID          = '1ASDXEKBNJP7o--a4dixs6TcTJNZ7qa6sfT0d-N_YFGM';
 const CLIENTS           = ['Amazon', 'リコー', 'ウエルシア']; // 実際のクライアント名に変更
 
